@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surefoot ROI Calculator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1230;--card:#231a3d;--card2:#2c2248;--border:#3d2f5e;--text:#E2DCF1;--muted:#b3a8d0;--accent:#FEC43C;--accent2:#FEC43C;--warn:#FEC43C;--blue:#522FAE;--purple:#522FAE;--green-bg:rgba(82,47,174,.12);--teal-bg:rgba(82,47,174,.12);--sf-purple:#522FAE;--sf-lavender:#E2DCF1;--sf-gold:#FEC43C}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:24px;max-width:1400px;margin:0 auto;font-size:16px}
+h2{font-size:.9rem;font-weight:600;margin-bottom:12px;color:var(--sf-gold);text-transform:uppercase;letter-spacing:.05em}
+.header{display:flex;align-items:center;gap:16px;margin-bottom:32px;padding:20px 0;border-bottom:1px solid var(--border)}
+.logo{width:48px;height:48px;border-radius:50%;background:var(--sf-purple);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;color:var(--sf-gold);flex-shrink:0}
+.header-text h1{font-size:1.5rem;font-weight:700}
+.header-text p{color:var(--muted);font-size:.85rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:4px;font-weight:500}
+input[type=number],input[type=text]{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:1rem;width:100%;outline:none}
+input[type=number]:focus{border-color:var(--sf-gold)}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.tool-section{margin-bottom:16px;padding:12px;background:var(--card2);border-radius:8px;border:1px solid var(--border)}
+.tool-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tool-header input[type=checkbox]{width:18px;height:18px;accent-color:var(--sf-gold)}
+.tool-header a{color:var(--sf-lavender);text-decoration:none;font-weight:600;font-size:1rem}
+.tool-header a:hover{text-decoration:underline}
+.tier-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.tier-label{display:flex;align-items:center;gap:4px;font-size:.9rem;color:var(--muted);cursor:pointer;padding:5px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border);transition:.15s}
+.tier-label:has(input:checked){border-color:var(--sf-gold);color:var(--sf-gold);background:rgba(254,196,60,.1)}
+.tier-label input[type=radio]{display:none}
+.price-override{display:flex;align-items:center;gap:8px;font-size:.85rem}
+.price-override input{width:100px}
+.price-override span{color:var(--muted)}
+.plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.plan-option{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:.95rem;transition:.15s}
+.plan-option:has(input:checked){border-color:var(--sf-gold);background:rgba(254,196,60,.1)}
+.plan-option input[type=radio]{accent-color:var(--sf-gold)}
+.plan-price{font-weight:600;color:var(--sf-gold);margin-left:auto}
+.summary-bar{background:linear-gradient(135deg,rgba(82,47,174,.25),rgba(82,47,174,.15));border:1px solid var(--sf-purple);border-radius:12px;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.summary-item{text-align:center}
+.summary-item .val{font-size:1.3rem;font-weight:700}
+.summary-item .lbl{font-size:.75rem;color:var(--muted)}
+.summary-plus{font-size:1.5rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th{text-align:left;padding:10px 8px;border-bottom:2px solid var(--border);color:var(--sf-gold);font-size:.8rem;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+td{padding:10px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr.realistic{background:rgba(82,47,174,.15)}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:600;letter-spacing:.03em}
+.badge-gray{background:#374151;color:#9ca3af}
+.badge-yellow{background:rgba(245,158,11,.15);color:#f59e0b}
+.badge-green{background:rgba(82,47,174,.25);color:#a78bfa}
+.badge-blue{background:rgba(59,130,246,.15);color:#3b82f6}
+.projection{margin-top:24px}
+.proj-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px}
+.proj-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.proj-card h3{font-size:1rem;color:var(--muted);margin-bottom:12px}
+.proj-card .big{font-size:1.8rem;font-weight:700;color:var(--sf-gold);margin-bottom:4px}
+.proj-card .detail{font-size:.8rem;color:var(--muted);margin-bottom:2px}
+select{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.9rem;outline:none}
+.tools-total{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:12px;font-size:1rem;font-weight:600;color:var(--sf-gold)}
+.billing-toggle{display:flex;gap:4px;margin-bottom:8px}
+.billing-btn{padding:3px 8px;border-radius:4px;font-size:.7rem;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--muted)}
+.billing-btn.active{background:rgba(254,196,60,.15);border-color:var(--sf-gold);color:var(--sf-gold)}
+.neg{color:#ef4444}
+.pos{color:#4ade80}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><svg width="32" height="32" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M169.527 104.255H146.045C145.997 103.414 145.925 102.602 145.909 101.787C145.857 99.0193 145.414 96.3241 144.549 93.6889C143.314 89.9337 140.805 87.4449 137.113 86.1513C132.719 84.6129 128.166 84.2433 123.558 84.5665C120.393 84.7889 117.295 85.3065 114.275 86.4361C105.348 89.7769 103.592 102.149 109.788 108.068C112.876 111.018 116.473 113.001 120.417 114.41C128.846 117.421 137.305 120.348 145.752 123.307C148.213 124.169 150.697 124.969 153.135 125.89C159.747 128.394 165.35 132.312 169.584 138.022C172.559 142.037 174.091 146.582 174.255 151.602C174.437 157.174 173.735 162.574 171.433 167.702C168.221 174.862 162.686 179.707 155.852 183.212C150.409 186.002 144.589 187.607 138.559 188.556C132.393 189.525 126.195 189.618 119.993 189.315C114.053 189.026 108.256 187.92 102.703 185.67C92.1359 181.382 85.8415 173.502 83.2087 162.559C82.1839 158.3 81.6391 153.973 81.9015 149.594C83.3863 149.132 101.084 148.991 104.166 149.42C104.35 151.466 104.51 153.55 104.731 155.628C105.001 158.166 105.621 160.611 106.685 162.946C108.232 166.339 110.749 168.722 114.259 169.888C116.45 170.617 118.739 171.272 121.025 171.458C127.023 171.945 133.021 171.794 138.812 169.864C144.329 168.026 148.23 164.626 149.437 158.639C150.402 153.852 149.136 149.874 145.464 146.646C141.809 143.434 137.605 141.1 133.077 139.483C126.246 137.046 119.32 134.874 112.413 132.652C108.994 131.551 105.413 130.875 102.105 129.519C91.6791 125.248 84.4167 118.04 82.3375 106.582C81.1327 99.9449 81.6391 93.3601 84.2327 87.0577C87.4575 79.2219 93.5319 74.2767 101.05 70.917C107.373 68.0919 114.061 66.806 120.961 66.595C128.598 66.3611 136.183 66.7073 143.612 68.7287C149.34 70.2874 154.62 72.7252 159.03 76.7664C164.567 81.8385 167.494 88.3017 168.638 95.6137C169.071 98.3793 169.221 101.188 169.527 104.255Z" fill="white"/></svg></div>
+  <div class="header-text">
+    <h1>ROI Calculator</h1>
+    <p>Internal — Prospective Client Estimator</p>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Client Inputs</h2>
+    <div class="input-row">
+      <div><label>Monthly Unique Visitors</label><input type="number" id="muvs" value="200000"></div>
+      <div><label>Current CvR %</label><input type="number" id="cvr" value="1.10" step="0.01"></div>
+    </div>
+    <div class="input-row">
+      <div><label>Avg Monthly Conversions</label><input type="number" id="conversions" value="2200"></div>
+      <div><label>AOV ($)</label><input type="number" id="aov" value="115"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Surefoot Plan</h2>
+    <div class="plan-grid">
+      <label class="plan-option"><input type="radio" name="plan" value="4200" checked>6 cr/qtr<span class="plan-price">$4,200</span></label>
+      <label class="plan-option"><input type="radio" name="plan" value="5500">8 cr/qtr<span class="plan-price">$5,500</span></label>
+      <label class="plan-option"><input type="radio" name="plan" value="8000">10 cr/qtr<span class="plan-price">$8,000</span></label>
+      <label class="plan-option"><input type="radio" name="plan" value="11400">6 cr/mo<span class="plan-price">$11,400</span></label>
+      <label class="plan-option"><input type="radio" name="plan" value="14800">8 cr/mo<span class="plan-price">$14,800</span></label>
+      <label class="plan-option"><input type="radio" name="plan" value="17500">10 cr/mo<span class="plan-price">$17,500</span></label>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:24px">
+  <h2>Tools Stack</h2>
+  
+  <div class="tool-section">
+    <div class="tool-header">
+      <input type="checkbox" id="tool_cs" data-tool="cs">
+      <a href="https://invite.contentsquare.com/pricing5638" target="_blank">Contentsquare</a>
+    </div>
+    <div class="tier-row" id="tiers_cs">
+      <label class="tier-label"><input type="radio" name="tier_cs" value="0" data-tier-name="Free" checked>Free · $0</label>
+      <label class="tier-label"><input type="radio" name="tier_cs" value="39" data-tier-name="Growth">Growth · $39</label>
+      <label class="tier-label"><input type="radio" name="tier_cs" value="500" data-tier-name="Pro">Pro · $500</label>
+      <label class="tier-label"><input type="radio" name="tier_cs" value="1000" data-tier-name="Enterprise">Enterprise · $1,000</label>
+    </div>
+    <div class="price-override"><span>Price/mo: $</span><input type="number" id="price_cs" value="0"><span>/mo</span></div>
+  </div>
+
+  <div class="tool-section">
+    <div class="tool-header">
+      <input type="checkbox" id="tool_convert" data-tool="convert">
+      <a href="#" target="_blank">Convert</a>
+    </div>
+    <div class="billing-toggle">
+      <span class="billing-btn active" data-billing="annual" data-tool="convert">Annual</span>
+      <span class="billing-btn" data-billing="monthly" data-tool="convert">Monthly</span>
+    </div>
+    <div class="tier-row" id="tiers_convert">
+      <label class="tier-label"><input type="radio" name="tier_convert" value="299" data-tier-name="Growth" data-annual="299" data-monthly="399" checked>Growth · $299</label>
+      <label class="tier-label"><input type="radio" name="tier_convert" value="420" data-tier-name="Pro" data-annual="420" data-monthly="599">Pro · $420</label>
+      <label class="tier-label"><input type="radio" name="tier_convert" value="1000" data-tier-name="Enterprise" data-annual="1000" data-monthly="1000">Enterprise · $1,000</label>
+    </div>
+    <div class="price-override"><span>Price/mo: $</span><input type="number" id="price_convert" value="299"><span>/mo</span></div>
+  </div>
+
+  <div class="tool-section">
+    <div class="tool-header">
+      <input type="checkbox" id="tool_shoplift" data-tool="shoplift">
+      <a href="#" target="_blank">Shoplift</a>
+    </div>
+    <div class="tier-row" id="tiers_shoplift">
+      <label class="tier-label"><input type="radio" name="tier_shoplift" value="74" data-tier-name="Core" checked>Core · $74</label>
+      <label class="tier-label"><input type="radio" name="tier_shoplift" value="299" data-tier-name="Advanced">Advanced · $299</label>
+      <label class="tier-label"><input type="radio" name="tier_shoplift" value="699" data-tier-name="Pro">Pro · $699</label>
+    </div>
+    <div class="price-override"><span>Price/mo: $</span><input type="number" id="price_shoplift" value="74"><span>/mo</span></div>
+  </div>
+
+  <div class="tool-section">
+    <div class="tool-header">
+      <input type="checkbox" id="tool_visually" data-tool="visually">
+      <a href="#" target="_blank">Visually</a>
+    </div>
+    <div class="tier-row" id="tiers_visually">
+      <label class="tier-label"><input type="radio" name="tier_visually" value="720" data-tier-name="Launch" checked>Launch · $720</label>
+      <label class="tier-label"><input type="radio" name="tier_visually" value="1200" data-tier-name="Pro">Pro · $1,200</label>
+      <label class="tier-label"><input type="radio" name="tier_visually" value="3600" data-tier-name="Scale">Scale · $3,600</label>
+    </div>
+    <div class="price-override"><span>Price/mo: $</span><input type="number" id="price_visually" value="720"><span>/mo</span></div>
+  </div>
+
+  <div class="tools-total">Tools Total: <span id="toolsTotal">$0</span>/mo</div>
+</div>
+
+<div class="summary-bar">
+  <div class="summary-item"><div class="val" id="sumTools">$0</div><div class="lbl">Tools</div></div>
+  <div class="summary-plus">+</div>
+  <div class="summary-item"><div class="val" id="sumPlan">$4,200</div><div class="lbl">Surefoot Plan</div></div>
+  <div class="summary-plus">=</div>
+  <div class="summary-item"><div class="val" id="sumTotal">$4,200</div><div class="lbl">Total Monthly Investment</div></div>
+</div>
+
+<div class="card" style="margin-bottom:24px;overflow-x:auto">
+  <h2>Scenario Analysis</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Lift %</th><th>Label</th><th>New CvR</th><th>New Txns</th><th>Mo. Revenue</th><th>Mo. Rev Lift</th><th>Net Mo. Profit</th><th>ROI %</th><th>Annual Rev Lift</th><th>Annual Net Profit</th><th>Payback (mo)</th>
+      </tr>
+    </thead>
+    <tbody id="scenarioBody"></tbody>
+  </table>
+</div>
+
+<div class="card projection">
+  <h2>Cumulative Value Projection</h2>
+  <div style="margin-bottom:12px">
+    <label>Scenario: </label>
+    <select id="projScenario">
+      <option value="5">5% Lift (Conservative)</option>
+      <option value="10" selected>10% Lift (Realistic)</option>
+      <option value="15">15% Lift (Realistic)</option>
+      <option value="20">20% Lift (Optimistic)</option>
+      <option value="25">25% Lift (Optimistic)</option>
+      <option value="30">30% Lift (Optimistic)</option>
+    </select>
+  </div>
+  <div class="proj-cards">
+    <div class="proj-card"><h3>3 Months</h3><div class="big" id="proj3profit"></div><div class="detail" id="proj3rev"></div><div class="detail" id="proj3cost"></div></div>
+    <div class="proj-card"><h3>6 Months</h3><div class="big" id="proj6profit"></div><div class="detail" id="proj6rev"></div><div class="detail" id="proj6cost"></div></div>
+    <div class="proj-card"><h3>12 Months</h3><div class="big" id="proj12profit"></div><div class="detail" id="proj12rev"></div><div class="detail" id="proj12cost"></div></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmtD = (n,d=2) => n.toFixed(d);
+
+const tools = ['cs','convert','shoplift','visually'];
+let convertBilling = 'annual';
+
+// ── Pricing lookup tables keyed by MUV thresholds ──
+// Convert: priced by MTUs (≈ MUVs). Data from convert.com/pricing
+const convertPricing = {
+  annual: {
+    Growth:     [{maxMUV:100000,price:299},{maxMUV:250000,price:560},{maxMUV:500000,price:1050},{maxMUV:750000,price:1540},{maxMUV:Infinity,price:1540}],
+    Pro:        [{maxMUV:100000,price:420},{maxMUV:250000,price:700},{maxMUV:500000,price:1330},{maxMUV:750000,price:1960},{maxMUV:1000000,price:2590},{maxMUV:1500000,price:2967},{maxMUV:Infinity,price:3488}],
+    Enterprise: [{maxMUV:Infinity,price:1000}]
+  },
+  monthly: {
+    Growth:     [{maxMUV:100000,price:399},{maxMUV:250000,price:799},{maxMUV:500000,price:1499},{maxMUV:750000,price:2199},{maxMUV:Infinity,price:2199}],
+    Pro:        [{maxMUV:100000,price:599},{maxMUV:250000,price:999},{maxMUV:500000,price:1899},{maxMUV:750000,price:2799},{maxMUV:1000000,price:3699},{maxMUV:1500000,price:4238},{maxMUV:Infinity,price:4982}],
+    Enterprise: [{maxMUV:Infinity,price:1000}]
+  }
+};
+
+// Shoplift: priced by monthly store visitors (≈ MUVs)
+const shopliftPricing = {
+  Core:     [{maxMUV:50000,price:74},{maxMUV:100000,price:149},{maxMUV:250000,price:299},{maxMUV:Infinity,price:449}],
+  Advanced: [{maxMUV:100000,price:299},{maxMUV:250000,price:499},{maxMUV:Infinity,price:699}],
+  Pro:      [{maxMUV:250000,price:699},{maxMUV:500000,price:999},{maxMUV:Infinity,price:1299}]
+};
+
+// Contentsquare: priced by monthly sessions (≈ MUVs × ~1.5 sessions/visitor avg)
+const csPricing = {
+  Free:       [{maxMUV:Infinity,price:0}],
+  Growth:     [{maxMUV:50000,price:39},{maxMUV:100000,price:79},{maxMUV:250000,price:149},{maxMUV:500000,price:299},{maxMUV:Infinity,price:499}],
+  Pro:        [{maxMUV:250000,price:500},{maxMUV:500000,price:800},{maxMUV:1000000,price:1200},{maxMUV:Infinity,price:1800}],
+  Enterprise: [{maxMUV:Infinity,price:1000}]
+};
+
+// Visually: priced by monthly orders. Orders ≈ MUVs × CvR
+const visuallyPricing = {
+  Launch: [{maxOrders:1500,price:240},{maxOrders:3000,price:360},{maxOrders:5000,price:480},{maxOrders:7500,price:600},{maxOrders:10000,price:720},{maxOrders:15000,price:960},{maxOrders:20000,price:1200},{maxOrders:Infinity,price:1800}],
+  Pro:    [{maxOrders:600,price:80},{maxOrders:1500,price:200},{maxOrders:3000,price:480},{maxOrders:5000,price:720},{maxOrders:7500,price:960},{maxOrders:10000,price:1200},{maxOrders:15000,price:1600},{maxOrders:20000,price:2400},{maxOrders:Infinity,price:3000}],
+  Scale:  [{maxOrders:7500,price:2400},{maxOrders:10000,price:3600},{maxOrders:15000,price:4800},{maxOrders:Infinity,price:6000}]
+};
+
+function lookupPrice(tiers, value) {
+  for (const t of tiers) if (value <= t.maxMUV || value <= t.maxOrders) return t.price;
+  return tiers[tiers.length-1].price;
+}
+
+function updateTierLabel(radio, price) {
+  const tierName = radio.getAttribute('data-tier-name');
+  const label = radio.parentElement;
+  const fmtPrice = '$' + Math.round(price).toLocaleString('en-US');
+  label.innerHTML = '';
+  label.appendChild(radio);
+  label.append(` ${tierName} · ${fmtPrice}`);
+}
+
+function updateToolPrices() {
+  const muvs = +$('muvs').value || 0;
+  const cvr = +$('cvr').value || 0;
+  const orders = Math.round(muvs * cvr / 100);
+
+  // Update ALL tier labels and prices for each tool
+
+  // Contentsquare
+  document.querySelectorAll('input[name="tier_cs"]').forEach(r => {
+    const tn = r.getAttribute('data-tier-name');
+    if (tn && csPricing[tn]) {
+      const p = lookupPrice(csPricing[tn], muvs);
+      r.value = p;
+      updateTierLabel(r, p);
+    }
+  });
+  const csChecked = document.querySelector('input[name="tier_cs"]:checked');
+  if (csChecked) $('price_cs').value = csChecked.value;
+
+  // Convert
+  document.querySelectorAll('input[name="tier_convert"]').forEach(r => {
+    const tn = r.getAttribute('data-tier-name');
+    if (tn && convertPricing[convertBilling]?.[tn]) {
+      const p = lookupPrice(convertPricing[convertBilling][tn], muvs);
+      r.value = p;
+      r.dataset.annual = lookupPrice((convertPricing.annual[tn]||[{maxMUV:Infinity,price:p}]), muvs);
+      r.dataset.monthly = lookupPrice((convertPricing.monthly[tn]||[{maxMUV:Infinity,price:p}]), muvs);
+      updateTierLabel(r, p);
+    }
+  });
+  const convChecked = document.querySelector('input[name="tier_convert"]:checked');
+  if (convChecked) $('price_convert').value = convChecked.value;
+
+  // Shoplift
+  document.querySelectorAll('input[name="tier_shoplift"]').forEach(r => {
+    const tn = r.getAttribute('data-tier-name');
+    if (tn && shopliftPricing[tn]) {
+      const p = lookupPrice(shopliftPricing[tn], muvs);
+      r.value = p;
+      updateTierLabel(r, p);
+    }
+  });
+  const slChecked = document.querySelector('input[name="tier_shoplift"]:checked');
+  if (slChecked) $('price_shoplift').value = slChecked.value;
+
+  // Visually (uses orders derived from MUVs × CvR)
+  document.querySelectorAll('input[name="tier_visually"]').forEach(r => {
+    const tn = r.getAttribute('data-tier-name');
+    if (tn && visuallyPricing[tn]) {
+      const p = lookupPrice(visuallyPricing[tn], orders);
+      r.value = p;
+      updateTierLabel(r, p);
+    }
+  });
+  const visChecked = document.querySelector('input[name="tier_visually"]:checked');
+  if (visChecked) $('price_visually').value = visChecked.value;
+}
+
+// Billing toggle for Convert
+document.querySelectorAll('.billing-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tool = btn.dataset.tool;
+    if (tool !== 'convert') return;
+    document.querySelectorAll(`.billing-btn[data-tool="convert"]`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    convertBilling = btn.dataset.billing;
+    // Update tier labels and value
+    document.querySelectorAll('input[name="tier_convert"]').forEach(r => {
+      const v = r.dataset[convertBilling];
+      r.value = v;
+      r.parentElement.textContent = '';
+      r.parentElement.appendChild(r);
+      const tierName = r.dataset.annual === '299' ? 'Growth' : r.dataset.annual === '420' ? 'Pro' : 'Enterprise';
+      r.parentElement.append(` ${tierName} · $${Number(v).toLocaleString()}`);
+    });
+    updateToolPrices();
+    recalc();
+  });
+});
+
+// Tier selection updates price (lookup by MUVs)
+tools.forEach(t => {
+  document.querySelectorAll(`input[name="tier_${t}"]`).forEach(r => {
+    r.addEventListener('change', () => {
+      updateToolPrices();
+      recalc();
+    });
+  });
+});
+
+// Auto-calc conversions from MUVs × CvR
+let convManual = false;
+$('conversions').addEventListener('input', () => { convManual = true; recalc(); });
+$('muvs').addEventListener('input', () => { 
+  if (!convManual) $('conversions').value = Math.round(+$('muvs').value * +$('cvr').value / 100);
+  updateToolPrices();
+  recalc();
+});
+$('cvr').addEventListener('input', () => {
+  if (!convManual) $('conversions').value = Math.round(+$('muvs').value * +$('cvr').value / 100);
+  updateToolPrices();
+  recalc();
+});
+$('aov').addEventListener('input', recalc);
+
+// Tool checkboxes and price overrides
+tools.forEach(t => {
+  $(`tool_${t}`).addEventListener('change', recalc);
+  $(`price_${t}`).addEventListener('input', recalc);
+});
+
+// Plan radios
+document.querySelectorAll('input[name="plan"]').forEach(r => r.addEventListener('change', recalc));
+
+// Projection scenario
+$('projScenario').addEventListener('change', recalc);
+
+function getToolsTotal() {
+  let total = 0;
+  tools.forEach(t => {
+    if ($(`tool_${t}`).checked) total += +$(`price_${t}`).value || 0;
+  });
+  return total;
+}
+
+function getPlan() {
+  return +document.querySelector('input[name="plan"]:checked').value;
+}
+
+function rampMultiplier(month) {
+  if (month === 1) return 0;
+  if (month === 2) return 0.5;
+  return 1;
+}
+
+function paybackMonths(moLift, totalInv) {
+  if (moLift <= 0 || totalInv <= 0) return '—';
+  let cumProfit = 0;
+  for (let m = 1; m <= 120; m++) {
+    cumProfit += moLift * rampMultiplier(m) - totalInv;
+    if (cumProfit >= 0) return m;
+  }
+  return '>120';
+}
+
+function recalc() {
+  const muvs = +$('muvs').value || 0;
+  const cvr = +$('cvr').value || 0;
+  const conversions = +$('conversions').value || 0;
+  const aov = +$('aov').value || 0;
+  const baseRev = conversions * aov;
+  const toolsTotal = getToolsTotal();
+  const plan = getPlan();
+  const totalInv = toolsTotal + plan;
+
+  $('toolsTotal').textContent = fmt(toolsTotal);
+  $('sumTools').textContent = fmt(toolsTotal);
+  $('sumPlan').textContent = fmt(plan);
+  $('sumTotal').textContent = fmt(totalInv);
+
+  const lifts = [0,5,10,15,20,25,30];
+  const labels = {0:'Baseline',5:'Conservative',10:'Realistic',15:'Realistic',20:'Optimistic',25:'Optimistic',30:'Optimistic'};
+  const badgeClass = {Baseline:'badge-gray',Conservative:'badge-yellow',Realistic:'badge-green',Optimistic:'badge-blue'};
+
+  let html = '';
+  lifts.forEach(l => {
+    const label = labels[l];
+    const bc = badgeClass[label];
+    const newCvr = cvr * (1 + l/100);
+    const newTxns = conversions * (1 + l/100);
+    const moRev = newTxns * aov;
+    const moLift = moRev - baseRev;
+    const netProfit = moLift - totalInv;
+    const roi = totalInv > 0 ? (moLift / totalInv) * 100 : 0;
+    const annLift = moLift * 12;
+    const annProfit = netProfit * 12;
+    const pb = paybackMonths(moLift, totalInv);
+    const isRealistic = l === 10 || l === 15;
+    const cls = isRealistic ? ' class="realistic"' : '';
+
+    if (l === 0) {
+      html += `<tr${cls}><td>0%</td><td><span class="badge ${bc}">${label}</span></td><td>${fmtD(newCvr)}%</td><td>${Math.round(newTxns).toLocaleString()}</td><td>${fmt(moRev)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
+    } else {
+      const profitCls = netProfit >= 0 ? 'pos' : 'neg';
+      const annProfitCls = annProfit >= 0 ? 'pos' : 'neg';
+      html += `<tr${cls}><td>${l}%</td><td><span class="badge ${bc}">${label}</span></td><td>${fmtD(newCvr)}%</td><td>${Math.round(newTxns).toLocaleString()}</td><td>${fmt(moRev)}</td><td>${fmt(moLift)}</td><td class="${profitCls}">${fmt(netProfit)}</td><td>${fmtD(roi,0)}%</td><td>${fmt(annLift)}</td><td class="${annProfitCls}">${fmt(annProfit)}</td><td>${pb}</td></tr>`;
+    }
+  });
+  $('scenarioBody').innerHTML = html;
+
+  // Projection
+  const selLift = +$('projScenario').value / 100;
+  const moLift = baseRev * selLift;
+
+  [3,6,12].forEach(months => {
+    let totalRev = 0, totalCost = totalInv * months;
+    for (let m = 1; m <= months; m++) totalRev += moLift * rampMultiplier(m);
+    const netP = totalRev - totalCost;
+    const cls = netP >= 0 ? 'pos' : 'neg';
+    $(`proj${months}profit`).textContent = fmt(netP);
+    $(`proj${months}profit`).className = 'big ' + cls;
+    $(`proj${months}rev`).textContent = 'Rev Lift: ' + fmt(totalRev);
+    $(`proj${months}cost`).textContent = 'Cost: ' + fmt(totalCost);
+  });
+}
+
+// Init
+$('conversions').value = Math.round(200000 * 1.10 / 100);
+updateToolPrices();
+recalc();
+</script>
+</body>
+</html>
